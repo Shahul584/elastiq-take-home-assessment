@@ -1,26 +1,39 @@
-# QA Selenium Automation with Python
+# qa_selenium_test.py
 
-## Objective
-Create a Selenium automation script in Python to validate search functionality on the **Selenium Playground** website.
+import time
+import pytest
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 
-> [!NOTE]
-> **Deliverables:**
-> 1. A Python script (`qa_selenium_test.py`) that:
->    - Navigates to the [Selenium Playground Table Search Demo](https://www.lambdatest.com/selenium-playground/table-sort-search-demo).
->    - Locates and interacts with the search box to search for "New York".
->    - Validates that the search results show **5 entries out of 24 total entries**.
-> 2. A brief **README** explaining the approach and how to run the script.
-> 3. Any additional setup instructions (e.g., local environment, dependencies, drivers etc).
+@pytest.fixture(scope="module")
+def setup():
+    # Set up the Chrome WebDriver
+    driver = webdriver.Chrome()
+    yield driver
+    driver.quit()
 
-> [!TIP]
-> Use Python's `pytest` framework to structure your test cases.
+def test_search_functionality(setup):
+    driver = setup
+    driver.get("https://www.lambdatest.com/selenium-playground/table-sort-search-demo")
 
-> [!IMPORTANT]
-> - **Environment Setup:** Follow good coding practices and ensure the script is compatible with the latest stable Selenium version.
-> - **Browser Compatibility:** Test with at least one major browser (e.g., Chrome, Firefox).
+    # Locate the search box
+    search_box = driver.find_element(By.ID, "searchbox")
+    
+    # Interact with the search box
+    search_box.send_keys("New York")
+    search_box.send_keys(Keys.RETURN)
 
-> [!CAUTION]
-> - **Assertions:** Ensure all validations use robust assertion statements.
-> - **Code Quality:** Follow PEP8 standards for Python code.
+    # Wait for results to load
+    time.sleep(2)
 
-**Good luck!**
+    # Validate the search results
+    results = driver.find_elements(By.XPATH, "//tbody/tr")
+    assert len(results) == 5, f"Expected 5 entries, but got {len(results)}"
+    
+    # Validate total entries
+    total_entries = driver.find_element(By.XPATH, "//div[@id='example_info']").text
+    assert "24" in total_entries, f"Expected total entries to be 24, but got {total_entries}"
+
+if __name__ == "__main__":
+    pytest.main()
